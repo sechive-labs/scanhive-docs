@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScanHive Setup — Local Setup</title>
+<link rel="icon" type="image/svg+xml" href="../../scanhive-favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <header class="top">
+    <a class="brand-row" href="index.html">
+      <svg class="mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <rect width="64" height="64" rx="14" fill="#0d0b14"/>
+        <polygon points="32,10 50,21 50,43 32,54 14,43 14,21" fill="#1a1425" stroke="#a78bfa" stroke-width="4"/>
+        <rect x="24" y="27" width="6" height="11" fill="#a78bfa"/>
+        <rect x="32" y="35" width="9" height="3" fill="#c4b5fd"/>
+      </svg>
+      <span class="word">SCAN<b>HIVE</b></span>
+      <span class="chip">Community</span>
+    </a>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <a href="index.html"><span class="pagenum">1</span>Introduction</a>
+      <a href="local-setup.html" class="current"><span class="pagenum">2</span>Local Setup</a>
+      <a href="push-data.html"><span class="pagenum">3</span>Push Scan Results</a>
+    </nav>
+
+    <main>
+    <section id="local-setup">
+      <p class="eyebrow">Run it on your machine</p>
+      <h2>Local Setup</h2>
+      <p>Uses a fake inbox instead of a real mail provider, so you can try registration and invite flows without owning a domain.</p>
+
+      <div class="step-head"><span class="hexnum">1</span><h3 style="margin:0;">Get the code and create your environment file</h3></div>
+      <div class="term">
+        <div class="bar"><span></span><span></span><span></span><label>terminal</label></div>
+        <pre><span class="c"># clone and enter the repo</span>
+git clone https://github.com/pentestguy/scanhive-dashboard.git
+cd scanhive-dashboard
+
+<span class="c"># create the backend environment file</span>
+cp backend/.env.example backend/.env</pre>
+      </div>
+      <p>No secrets to fill in. <code>DATABASE_URL</code> already points at the <code>postgres</code> service, and <code>SECRET_KEY</code> is generated and persisted automatically on first boot.</p>
+
+      <div class="step-head" style="margin-top:28px;"><span class="hexnum">2</span><h3 style="margin:0;">Start the stack with the local mail catcher</h3></div>
+      <p><a href="https://mailpit.axllent.org/" target="_blank" rel="noopener">Mailpit</a> catches every outgoing email locally so nothing ever reaches a real address.</p>
+      <div class="term">
+        <div class="bar"><span></span><span></span><span></span><label>terminal</label></div>
+        <pre>docker compose --profile mail-testing up -d --build</pre>
+      </div>
+      <p>Verify everything is healthy:</p>
+      <div class="term">
+        <div class="bar"><span></span><span></span><span></span><label>terminal</label></div>
+        <pre>docker compose ps
+curl http://localhost:8000/health
+<span class="c">→ {"database":"Connected","status":"Healthy"}</span></pre>
+      </div>
+      <div class="callout">
+        <span class="ico">i</span>
+        <p>Don't want email at all? Leave <code>SMTP_HOST</code> blank in <code>backend/.env</code>. Invitations still work — an admin copies the link straight from <b>Settings → Users</b> and shares it manually.</p>
+      </div>
+
+      <div class="step-head" style="margin-top:28px;"><span class="hexnum">3</span><h3 style="margin:0;">First run</h3></div>
+      <p>Open <code>http://localhost</code> in a browser.</p>
+      <ul class="plain">
+        <li>Click <b>Create one</b> to register your organization — the account you sign up with becomes its first administrator, and you're signed in immediately.</li>
+        <li>Go to <b>Settings → Users → Invite member</b> to invite a teammate. Each invite creates a link at <code>/accept-invite/:token</code>, valid for 7 days.</li>
+        <li>Read the caught invite email at <a href="http://localhost:8025"><code>http://localhost:8025</code></a> — no login needed. The invite API response also includes <code>"email_sent": true</code>, so you know instantly it fired.</li>
+      </ul>
+
+      <h3>Troubleshooting</h3>
+      <p><b>Port 80 is already in use.</b> Something else on your machine is bound to it. Change the frontend's host-side mapping in <code>docker-compose.yml</code>, e.g. <code>"8080:80"</code>, then open <code>http://localhost:8080</code> instead.</p>
+      <p><b>Mailpit's inbox stays empty.</b> Confirm the stack was started with <code>--profile mail-testing</code>, and that <code>SMTP_HOST</code> is exactly <code>mailpit</code> — that's the service name on the Compose network, not <code>localhost</code> or <code>host.docker.internal</code>.</p>
+    </section>
+
+    <nav class="pager">
+      <a class="pager-link prev" href="index.html">
+        <span class="pager-label">← Previous</span>
+        <span class="pager-title">Introduction</span>
+      </a>
+      <a class="pager-link next" href="push-data.html">
+        <span class="pager-label">Next →</span>
+        <span class="pager-title">Push Scan Results</span>
+      </a>
+    </nav>
+    </main>
+  </div>
+
+  <footer>
+    ScanHive Community - @2026
+  </footer>
+</div>
+
+</body>
+</html>

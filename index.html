@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScanHive Setup — Introduction</title>
+<link rel="icon" type="image/svg+xml" href="../../scanhive-favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <header class="top">
+    <a class="brand-row" href="index.html">
+      <svg class="mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <rect width="64" height="64" rx="14" fill="#0d0b14"/>
+        <polygon points="32,10 50,21 50,43 32,54 14,43 14,21" fill="#1a1425" stroke="#a78bfa" stroke-width="4"/>
+        <rect x="24" y="27" width="6" height="11" fill="#a78bfa"/>
+        <rect x="32" y="35" width="9" height="3" fill="#c4b5fd"/>
+      </svg>
+      <span class="word">SCAN<b>HIVE</b></span>
+      <span class="chip">Community</span>
+    </a>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <a href="index.html" class="current"><span class="pagenum">1</span>Introduction</a>
+      <a href="local-setup.html"><span class="pagenum">2</span>Local Setup</a>
+      <a href="push-data.html"><span class="pagenum">3</span>Push Scan Results</a>
+    </nav>
+
+    <main>
+      <section id="introduction">
+        <p class="eyebrow">Start here</p>
+        <h2>Introduction</h2>
+        <p>ScanHive Community is the free, self-hosted edition of ScanHive — a workspace for security scan results produced throughout your software delivery lifecycle. It normalizes SARIF reports, correlates recurring findings across scans, and tracks the current security posture per project.</p>
+        <p>Continue to <a href="local-setup.html">Local Setup</a> to get ScanHive running on your machine, then <a href="push-data.html">Push Scan Results</a> to wire it into your CI pipeline.</p>
+
+        <h3>Prerequisites</h3>
+        <ul class="plain">
+          <li>Docker Desktop (or Docker Engine + the Compose plugin)</li>
+          <li>Git</li>
+          <li>A terminal — every command below is copy-pasteable as-is</li>
+        </ul>
+      </section>
+
+      <nav class="pager">
+        <span></span>
+        <a class="pager-link next" href="local-setup.html">
+          <span class="pager-label">Next →</span>
+          <span class="pager-title">Local Setup</span>
+        </a>
+      </nav>
+    </main>
+  </div>
+
+  <footer>
+    ScanHive Community - @2026
+  </footer>
+</div>
+
+</body>
+</html>

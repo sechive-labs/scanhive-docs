@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ScanHive Setup — Push Scan Results</title>
+<link rel="icon" type="image/svg+xml" href="../../scanhive-favicon.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <header class="top">
+    <a class="brand-row" href="index.html">
+      <svg class="mark" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <rect width="64" height="64" rx="14" fill="#0d0b14"/>
+        <polygon points="32,10 50,21 50,43 32,54 14,43 14,21" fill="#1a1425" stroke="#a78bfa" stroke-width="4"/>
+        <rect x="24" y="27" width="6" height="11" fill="#a78bfa"/>
+        <rect x="32" y="35" width="9" height="3" fill="#c4b5fd"/>
+      </svg>
+      <span class="word">SCAN<b>HIVE</b></span>
+      <span class="chip">Community</span>
+    </a>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <a href="index.html"><span class="pagenum">1</span>Introduction</a>
+      <a href="local-setup.html"><span class="pagenum">2</span>Local Setup</a>
+      <a href="push-data.html" class="current"><span class="pagenum">3</span>Push Scan Results</a>
+    </nav>
+
+    <main>
+      <section id="push-data">
+        <p class="eyebrow">Wire up your pipeline</p>
+        <h2>Push Scan Results to ScanHive</h2>
+        <p>Every scan result gets into ScanHive the same way: one HTTP call to the upload endpoint, authenticated with an API key. This page covers the scan types it understands, how to get a project and a key from the UI, and a ready-to-paste Azure Pipelines task.</p>
+
+        <div class="step-head"><span class="hexnum">1</span><h3 style="margin:0;">Supported scan types</h3></div>
+        <p>Each upload is classified as one of six types — pick the one matching your scanner's output. Values are matched exactly, including the space in <code>Container Security</code>.</p>
+        <div class="table-scroll">
+          <table>
+            <tr><th>Scan type</th><th>What it catches</th><th>Example tools</th></tr>
+            <tr><td><code>SAST</code></td><td>Vulnerable patterns in your own source code</td><td>Semgrep, CodeQL, Checkmarx, Fortify</td></tr>
+            <tr><td><code>SCA</code></td><td>Known vulnerabilities in open-source dependencies</td><td>Snyk</td></tr>
+            <tr><td><code>Secrets</code></td><td>Credentials, tokens, and keys committed to the repo</td><td>Gitleaks</td></tr>
+            <tr><td><code>Container Security</code></td><td>Vulnerabilities in container images and base layers</td><td>Trivy, Grype</td></tr>
+            <tr><td><code>IaC</code></td><td>Misconfigurations in Terraform, CloudFormation, Kubernetes manifests</td><td>Checkov, KICS</td></tr>
+            <tr><td><code>DAST</code></td><td>Runtime testing against a deployed, running application</td><td>OWASP ZAP</td></tr>
+          </table>
+        </div>
+
+        <div class="step-head" style="margin-top:28px;"><span class="hexnum">2</span><h3 style="margin:0;">Create an API key and a project</h3></div>
+        <p>Every upload needs two things: a project to own the results, and an API key to authenticate the request.</p>
+
+        <p><b>Create a project</b> — <b>Projects → Create project</b>. Project names are unique per organization and case-insensitive.</p>
+        <figure class="shot">
+          <img src="assets/create-project-form-filled.png" alt="ScanHive Create project dialog with the name field filled in">
+          <figcaption>Projects → Create project</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="assets/projects-list.png" alt="ScanHive projects list showing the newly created project">
+          <figcaption>The new project's name — or the ID from its URL — is what you'll use as <code>PROJECT_ID</code> below.</figcaption>
+        </figure>
+
+        <p><b>Create an API key</b> — <b>Settings → API Keys → Create API key</b>. Keys are valid for 365 days, and the plaintext value is shown exactly once.</p>
+        <figure class="shot">
+          <img src="assets/create-api-key-form.png" alt="ScanHive Create API key dialog">
+          <figcaption>Settings → API Keys → Create API key</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="assets/api-key-created.png" alt="ScanHive API key created dialog showing the key once">
+          <figcaption>Copy it now — it won't be shown again. Store it as a pipeline secret, never in the repo.</figcaption>
+        </figure>
+
+        <div class="callout">
+          <span class="ico">i</span>
+          <p>If a project name contains spaces (like <code>Payments Service</code> above), either URL-encode it or use the project's UUID instead — visible in the project's URL in the browser address bar. The tasks below don't encode the value for you.</p>
+        </div>
+
+        <div class="step-head" style="margin-top:28px;"><span class="hexnum">3</span><h3 style="margin:0;">Add it to your pipeline</h3></div>
+        <p>Drop this into <code>azure-pipelines.yml</code>. Add <code>PROJECT_ID</code> and <code>API_KEY</code> as pipeline variables first (Pipeline → Edit → Variables) — mark <code>API_KEY</code> secret with the lock icon.</p>
+
+        <div class="path-card bash">
+          <span class="tag">Bash</span>
+          <h3>Linux &amp; macOS agents</h3>
+          <div class="term">
+            <div class="bar"><span></span><span></span><span></span><label>azure-pipelines.yml</label></div>
+            <pre><span class="c">- task: Bash@3</span>
+  displayName: <span class="k">'Upload Report - ScanHive'</span>
+  inputs:
+    targetType: <span class="k">'inline'</span>
+    script: |
+      curl --fail --silent --show-error \
+        --request POST \
+        <span class="k">"http://localhost:8000/api/v1/scans/upload/$(PROJECT_ID)"</span> \
+        --header <span class="k">"X-API-Key: $(API_KEY)"</span> \
+        --form <span class="k">"scan_type=Secrets"</span> \
+        --form <span class="k">"file=@gitleaks.sarif"</span></pre>
+          </div>
+        </div>
+
+        <p style="font-size:0.85rem;">Swap <code>http://localhost:8000</code> for your real ScanHive URL, and <code>scan_type</code> / <code>file</code> to match whatever scanner produced the report for that stage.</p>
+      </section>
+
+      <nav class="pager">
+        <a class="pager-link prev" href="local-setup.html">
+          <span class="pager-label">← Previous</span>
+          <span class="pager-title">Local Setup</span>
+        </a>
+        <span></span>
+      </nav>
+    </main>
+  </div>
+
+  <footer>
+    ScanHive Community - @2026
+  </footer>
+</div>
+
+</body>
+</html>
